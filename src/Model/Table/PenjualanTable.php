@@ -40,6 +40,10 @@ class PenjualanTable extends Table
         $this->setTable('penjualan');
         $this->setDisplayField('nama_produk');
         $this->setPrimaryKey('id_penjualan');
+        $this->belongsTo('Produk', [
+        'foreignKey' => 'produk_id',
+        'joinType' => 'INNER',
+    ]);
     }
 
     /**

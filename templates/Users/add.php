@@ -13,7 +13,7 @@
         <?php
             echo $this->Form->control('username', ['required' => true]);
             echo $this->Form->control('password', ['required' => true, 'type' => 'password']);
-            echo $this->Form->control('role', ['required' => true, 'options' => ['admin' => 'Admin', 'user' => 'User']]);
+            echo $this->Form->control('role', ['required' => true, 'options' => ['admin' => 'Admin', 'petugas' => 'Petugas']]);
         ?>
     </fieldset>
     <?= $this->Form->submit(__('Daftar Akun')); ?>

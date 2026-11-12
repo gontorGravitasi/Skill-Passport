@@ -41,43 +41,91 @@ class PenjualanController extends AppController
      *
      * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
      */
-    public function add()
-    {
-        $penjualanEntity = $this->Penjualan->newEmptyEntity();
-        if ($this->request->is('post')) {
-            $penjualanEntity = $this->Penjualan->patchEntity($penjualanEntity, $this->request->getData());
-            if ($this->Penjualan->save($penjualanEntity)) {
-                $this->Flash->success(__('The penjualan has been saved.'));
+  public function add()
+{
+    $penjualan = $this->Penjualan->newEmptyEntity();
+    if ($this->request->is('post')) {
+        $data = $this->request->getData();
+        
+        $connection = $this->Penjualan->getConnection();
+        
+        try {
+            $result = $connection->transactional(function () use ($data) {
+                // Ambil data utama
+                $tanggal = $data['tanggal_penjualan'] ?? date('Y-m-d H:i:s');
+                $idPelanggan = $data['id_pelanggan'] ?? null;
+                $items = $data['items'] ?? [];
 
+                if (empty($items)) {
+                    throw new \Exception(__('Minimal harus ada 1 produk yang dipilih!'));
+                }
+
+                $produkTable = $this->fetchTable('Produk');
+
+                // Loop setiap baris produk yang diinput kasir
+                foreach ($items as $item) {
+                    $produkId = $item['produk_id'] ?? null;
+                    $jumlahBeli = (int)($item['jumlah_produk'] ?? 0);
+
+                    if (empty($produkId) || $jumlahBeli <= 0) {
+                        continue; // Lewati jika baris kosong
+                    }
+
+                    // 1. Simpan data per baris ke tabel penjualan
+                    $penjualanEntity = $this->Penjualan->newEmptyEntity();
+                    $penjualanEntity->tanggal_penjualan = $tanggal;
+                    $penjualanEntity->id_pelanggan = $idPelanggan;
+                    $penjualanEntity->produk_id = $produkId;
+                    $penjualanEntity->jumlah_produk = $jumlahBeli;
+                    
+                    // Ambil harga dari database untuk keamanan
+                    $produk = $produkTable->get($produkId);
+                    $penjualanEntity->harga = $produk->harga;
+                    $penjualanEntity->total = $produk->harga * $jumlahBeli;
+
+                    if (!$this->Penjualan->save($penjualanEntity)) {
+                        throw new \Exception(__('Gagal menyimpan salah satu item penjualan.'));
+                    }
+
+                    // 2. Kurangi stok di tabel Produk secara otomatis
+                    if ($produk->stok < $jumlahBeli) {
+                        throw new \Exception(__('Stok produk "' . $produk->nama_produk . '" tidak mencukupi! Sisa stok: ' . $produk->stok));
+                    }
+
+                    $produk->stok -= $jumlahBeli;
+                    if (!$produkTable->save($produk)) {
+                        throw new \Exception(__('Gagal memperbarui stok produk.'));
+                    }
+                }
+
+                return true;
+            });
+
+            if ($result) {
+                $this->Flash->success(__('Semua data penjualan berhasil disimpan dan stok telah diperbarui.'));
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('The penjualan could not be saved. Please, try again.'));
+        } catch (\Exception $e) {
+            $this->Flash->error(__('Gagal menyimpan penjualan: ' . $e->getMessage()));
         }
-        $this->set(compact('penjualanEntity'));
     }
 
-    /**
-     * Edit method
-     *
-     * @param string|null $id Penjualan id.
-     * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
-    public function edit($id = null)
-    {
-        $penjualanEntity = $this->Penjualan->get($id, contain: []);
-        if ($this->request->is(['patch', 'post', 'put'])) {
-            $penjualanEntity = $this->Penjualan->patchEntity($penjualanEntity, $this->request->getData());
-            if ($this->Penjualan->save($penjualanEntity)) {
-                $this->Flash->success(__('The penjualan has been saved.'));
-
-                return $this->redirect(['action' => 'index']);
-            }
-            $this->Flash->error(__('The penjualan could not be saved. Please, try again.'));
-        }
-        $this->set(compact('penjualanEntity'));
+    // Ambil data produk untuk dropdown dan JavaScript
+    $produksData = $this->Penjualan->Produk->find('all')->all();
+    
+    $produkList = [];
+    $produkData = [];
+    
+    foreach ($produksData as $prod) {
+        $produkList[$prod->id_produk] = $prod->nama_produk; 
+        $produkData[$prod->id_produk] = [
+            'harga' => $prod->harga ?? 0,
+            'stok' => $prod->stok ?? 0
+        ];
     }
 
+    $this->set(compact('penjualan', 'produkList', 'produkData'));
+}
     /**
      * Delete method
      *

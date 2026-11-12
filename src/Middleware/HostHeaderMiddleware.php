@@ -24,8 +24,7 @@ class HostHeaderMiddleware implements MiddlewareInterface
 {
     /**
      * Process the request and validate the Host header.
-     *
-     * @param \Psr\Http\Message\ServerRequestInterface $request The request.
+     *     * @param \Psr\Http\Message\ServerRequestInterface $request The request.
      * @param \Psr\Http\Server\RequestHandlerInterface $handler The request handler.
      * @return \Psr\Http\Message\ResponseInterface A response.
      */

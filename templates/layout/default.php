@@ -41,9 +41,9 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
         <div class="top-nav-links">
         <?= $this->Html->link('Login', ['controller' => 'Users', 'action' => 'login']) ?> | 
         <?= $this->Html->link('Register', ['controller' => 'Users', 'action' => 'add']) ?> | 
-        <?= $this->Html->link('Logout ⍈', ['controller' => 'Users', 'action' => 'logout'], ['confirm' => 'Apakah Anda yakin ingin keluar?']) ?>| 
-        <?= $this->Html->link('kembali', ['controller' => 'Pages', 'action' => 'home']) ?>
-        </div>
+        <?= $this->Html->link('Logout ⍈', ['controller' => 'Users', 'action' => 'logout'], ['confirm' => 'Apakah Anda yakin ingin keluar?']) ?>
+        
+    </div>
     </nav>
     <main class="main">
         <div class="container">

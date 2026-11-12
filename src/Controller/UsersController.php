@@ -51,6 +51,8 @@ public function login()
     if ($this->request->is('post') && !$result->isValid()) {
         $this->Flash->error(__('Username atau password salah!'));
     }
+    
+    
 }
 
 public function logout()

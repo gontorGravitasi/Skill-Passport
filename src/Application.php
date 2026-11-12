@@ -140,17 +140,14 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             'queryParam' => 'redirect',
         ]);
 
-        // Muat Session Authenticator
         $authenticationService->loadAuthenticator('Authentication.Session');
 
-        // Muat Form Authenticator dan masukkan Identifier di dalamnya
         $authenticationService->loadAuthenticator('Authentication.Form', [
             'fields' => [
                 'username' => 'username', // Ubah ke 'email' jika kolom login Anda memakai email
                 'password' => 'password',
             ],
             'loginUrl' => '/users/login',
-            // PENGATURAN IDENTIFIER SEKARANG DI SINI:
             'identifier' => [
                 'className' => 'Authentication.Password',
                 'fields' => [
